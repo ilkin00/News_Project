@@ -23,20 +23,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-&p%tysf^p#xr4a$4y*d603r8l^85^$_2y^9!$cj_9b#y_7%k)i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [
-    'https://admin.ilkin.site',
-    'https://ilkin.site',
-]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOW_ALL_ORIGINS = True  # Geliştirme için
-
+# settings.py
+AUTH_USER_MODEL = 'news.User'  # Uygulama_adı.ModelAdı
 # Application definition
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://admin.ilkin.site',
+    'http://admin.ilkin.site'
+]
+
+CSRF_COOKIE_SECURE = True  # HTTPS kullanıyorsanız
+SESSION_COOKIE_SECURE = True  # HTTPS kullanıyorsanız
+CSRF_COOKIE_SAMESITE = 'Lax'
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,21 +53,22 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'news',
     'corsheaders',
-    'ckeditor',
     'django_filters',
 ]
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-}
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

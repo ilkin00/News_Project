@@ -1,4 +1,9 @@
 from rest_framework import serializers
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, smart_str
+from django.contrib.auth.password_validation import validate_password
+
 from .models import (
     User, Article, Category, Tag,
     Comment, Reaction, Bookmark,
@@ -26,7 +31,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                 'profile_picture', 'bio', 'role', 'verified']
+                  'profile_picture', 'bio', 'role', 'verified']
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,7 +51,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = ['id', 'title', 'slug', 'excerpt', 'featured_image', 
-                 'publish_date', 'category', 'tags', 'author', 'view_count']
+                  'publish_date', 'category', 'tags', 'author', 'view_count']
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
@@ -92,3 +97,24 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = '__all__'
+
+# New for password reset
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value

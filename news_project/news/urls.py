@@ -8,7 +8,10 @@ from .views import (
     ReactionView,
     BookmarkListView, BookmarkDetailView,
     NewsletterSubscriptionView,
-    SiteSettingsView
+    SiteSettingsView,
+    PasswordResetRequestView, 
+    PasswordResetConfirmView, 
+    ChangePasswordView
 )
 from .views import api_root
 
@@ -21,6 +24,10 @@ urlpatterns = [
     path('auth/register/', UserRegisterView.as_view(), name='register'),
     path('auth/login/', obtain_auth_token, name='login'),
     path('auth/profile/', UserProfileView.as_view(), name='profile'),
+    path('auth/password-reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('auth/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
+
     
     # Articles
     path('articles/', ArticleListView.as_view(), name='article-list'),

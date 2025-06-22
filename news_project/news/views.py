@@ -1,13 +1,17 @@
 from rest_framework import generics, permissions, status, filters
-from django.utils import timezone
-from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
+from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, smart_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 from .models import (
     User, Article, Category, Tag, 
@@ -21,7 +25,9 @@ from .serializers import (
     CategorySerializer, TagSerializer,
     CommentSerializer, ReactionSerializer,
     BookmarkSerializer, NewsletterSubscriptionSerializer,
-    SiteSettingsSerializer
+    SiteSettingsSerializer,
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    ChangePasswordSerializer
 )
 
 # API Root
@@ -32,6 +38,8 @@ def api_root(request, format=None):
             'register': reverse('register', request=request, format=format),
             'login': reverse('login', request=request, format=format),
             'profile': reverse('profile', request=request, format=format),
+            'password_reset': reverse('password-reset-request', request=request, format=format),
+            'password_change': reverse('change-password', request=request, format=format),
         },
         'articles': {
             'list': reverse('article-list', request=request, format=format),
@@ -60,7 +68,7 @@ class UserRegisterView(generics.CreateAPIView):
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
-                                         context={'request': request})
+                                           context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
@@ -77,6 +85,73 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return self.request.user
+
+# Password Reset Views
+class PasswordResetRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            reset_url = f"http://frontend-url.com/reset-password/{uid}/{token}/"
+
+            send_mail(
+                subject="Şifre Sıfırlama",
+                message=f"Şifrenizi sıfırlamak için bağlantı: {reset_url}",
+                from_email="noreply@example.com",
+                recipient_list=[user.email]
+            )
+        except User.DoesNotExist:
+            pass
+
+        return Response({'detail': 'Eğer e-posta kayıtlıysa şifre sıfırlama bağlantısı gönderildi.'})
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = smart_str(urlsafe_base64_decode(serializer.validated_data['uidb64']))
+            user = User.objects.get(pk=uid)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({'error': 'Geçersiz bağlantı.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, serializer.validated_data['token']):
+            return Response({'error': 'Token geçersiz veya süresi dolmuş.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({'detail': 'Şifreniz başarıyla sıfırlandı.'})
+
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    model = User
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({"old_password": ["Yanlış eski şifre."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({"detail": "Şifre başarıyla değiştirildi."})
 
 # Article Views
 class ArticleListView(generics.ListAPIView):

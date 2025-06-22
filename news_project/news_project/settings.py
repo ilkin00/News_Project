@@ -44,6 +44,8 @@ CSRF_COOKIE_SECURE = True  # HTTPS kullanıyorsanız
 SESSION_COOKIE_SECURE = True  # HTTPS kullanıyorsanız
 CSRF_COOKIE_SAMESITE = 'Lax'
 
+# Geliştirme için e-postalar terminale yazdırılır
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 INSTALLED_APPS = [
     'django.contrib.admin',

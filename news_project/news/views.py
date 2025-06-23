@@ -13,6 +13,7 @@ from django.utils.encoding import force_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
 
 from .models import (
     User, Article, Category, Tag, 
@@ -41,6 +42,7 @@ def api_root(request, format=None):
             'profile': reverse('profile', request=request, format=format),
             'password_reset': reverse('password-reset-request', request=request, format=format),
             'password_change': reverse('change-password', request=request, format=format),
+            'username_update': reverse('change-username', request=request, format=format), 
         },
         'articles': {
             'list': reverse('article-list', request=request, format=format),
@@ -153,6 +155,23 @@ class ChangePasswordView(generics.UpdateAPIView):
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         return Response({"detail": "Şifre başarıyla değiştirildi."})
+
+class UpdateUsernameView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        user = request.user
+        new_username = request.data.get('username')
+
+        if not new_username:
+            return Response({'error': 'Yeni istifadəçi adı tələb olunur.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=new_username).exclude(pk=user.pk).exists():
+            return Response({'error': 'Bu istifadəçi adı artıq istifadə olunur.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.username = new_username
+        user.save()
+        return Response({'detail': 'İstifadəçi adı uğurla yeniləndi.', 'username': user.username})
 
 # Article Views
 class ArticleListView(generics.ListAPIView):

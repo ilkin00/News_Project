@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.db import models
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+
 from .models import (
     User, Category, Tag, Article, Media,
     Comment, Reaction, Bookmark,
@@ -21,6 +24,11 @@ class ArticleAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     date_hierarchy = 'publish_date'
     ordering = ('-publish_date',)
+    
+    # Optional: CKEditor interfeysi göstərmək üçün (əgər göstərilmirsə)
+    formfield_overrides = {
+        models.TextField: {'widget': CKEditorUploadingWidget}
+    }
 
 # Tüm modelleri kaydet
 admin.site.register(User, UserAdmin)

@@ -13,7 +13,8 @@ from .views import (
     PasswordResetConfirmView, 
     ChangePasswordView,
     CategoryArticleListView,
-    TagArticleListView
+    TagArticleListView,
+    UpdateUsernameView
 )
 from .views import api_root
 
@@ -29,6 +30,8 @@ urlpatterns = [
     path('auth/password-reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
     path('auth/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('auth/change-username/', UpdateUsernameView.as_view(), name='change-username'),
+
 
     
     # Articles

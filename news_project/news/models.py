@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.text import slugify
 from django.urls import reverse
 from django.utils import timezone
+from ckeditor_uploader.fields import RichTextUploadingField
+
 
 # 1. Kullanıcı Modeli (Custom User)
 class User(AbstractUser):
@@ -134,9 +136,7 @@ class Article(models.Model):
         unique_for_date='publish_date',
         verbose_name="SEO URL"
     )
-    content = models.TextField(
-        verbose_name="İçerik"
-    )
+    content = RichTextUploadingField(verbose_name="İçerik")
     excerpt = models.TextField(
         max_length=300,
         blank=True,

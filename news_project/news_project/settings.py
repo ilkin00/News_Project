@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['*']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
+CKEDITOR_UPLOAD_PATH = "uploads/"
 CORS_ALLOW_ALL_ORIGINS = True  # Geliştirme için
 # settings.py
 AUTH_USER_MODEL = 'news.User'  # Uygulama_adı.ModelAdı
@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     'news',
     'corsheaders',
     'django_filters',
+    'ckeditor',
+    'ckeditor_uploader',
 ]
 
 REST_FRAMEWORK = {
@@ -139,7 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Baku'
 
 USE_I18N = True
 

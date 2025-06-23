@@ -103,9 +103,15 @@ GET /api/articles/hot/
 GET /api/categories/
 🔹 Etiketlər
 
+## Kateqoriyaya görə məqalələr
+GET /api/categories/articles/?search=<slug>
+
 GET /api/tags/
 💬 Şərhlər
 🔹 Şərhləri görüntüle / əlavə et
+
+## Tags görə məqalələr
+GET /api/Tags/articles/?search=<slug>
 
 GET /api/articles/<slug>/comments/
 POST /api/articles/<slug>/comments/
@@ -152,11 +158,8 @@ POST /api/newsletter/
 GET /api/settings/
 🔍 Məqalə Axtarışı (POST ilə)
 
-POST /api/articles/search/
+POST /api/articles/?search=<slug>
 
-{
-  "query": "Azərbaycan"
-}
 
 Cavab: uyğun olan məqalələrin siyahısı.
 🔗 API Root

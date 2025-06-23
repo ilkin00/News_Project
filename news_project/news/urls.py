@@ -11,7 +11,9 @@ from .views import (
     SiteSettingsView,
     PasswordResetRequestView, 
     PasswordResetConfirmView, 
-    ChangePasswordView
+    ChangePasswordView,
+    CategoryArticleListView,
+    TagArticleListView
 )
 from .views import api_root
 
@@ -37,8 +39,9 @@ urlpatterns = [
     
     # Categories & Tags
     path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('categories/articles/', CategoryArticleListView.as_view(), name='category-article-list'),
     path('tags/', TagListView.as_view(), name='tag-list'),
-    
+    path('tags/articles/', TagArticleListView.as_view(), name='tag-article-list'),
     # Comments
     path('articles/<slug:slug>/comments/', CommentListView.as_view(), name='comment-list'),
     

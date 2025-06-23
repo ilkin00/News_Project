@@ -12,6 +12,7 @@ from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 
 from .models import (
     User, Article, Category, Tag, 
@@ -185,11 +186,37 @@ class HotNewsView(generics.ListAPIView):
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
+    
+class CategoryArticleListView(generics.ListAPIView):
+    serializer_class = ArticleListSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            category = Category.objects.filter(slug__iexact=search_query).first()
+            if category:
+                return Article.objects.filter(category=category, status='published')
+        return Article.objects.none()
 
 class TagListView(generics.ListAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
+class TagArticleListView(generics.ListAPIView):
+    serializer_class = ArticleListSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            tag = Tag.objects.filter(
+                Q(slug__iexact=search_query) | Q(name__icontains=search_query)
+            ).first()
+            if tag:
+                return Article.objects.filter(tags=tag, status='published')
+        return Article.objects.none()
+        
 # Comment Views
 class CommentListView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
